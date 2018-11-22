@@ -13,24 +13,32 @@
 		body {
 			margin:0px auto;
 		}
-		#fixedLayer {
+		#descriptionLayer {
 			left: 40px;
 			top: 10px;
 			line-height:30px;
 			border:1px solid #F90;
 			font-size: 16px;
 		}
+		#loadingLayer {
+			position:fixed;
+			left: 300px;
+			top: 200px;
+			line-height:30px;
+			font-size: 50px;
+		}
+		
 	</style>
 	
 	
 	<script type="text/javascript" language="javascript">
 		
 	function closeDes(){
-		document.getElementById("fixedLayer").style.display = "none";
+		document.getElementById("descriptionLayer").style.display = "none";
 		document.getElementById("openDes").style.display = "block";
 	}
 	function openDes(){
-		document.getElementById("fixedLayer").style.display = "block";
+		document.getElementById("descriptionLayer").style.display = "block";
 		document.getElementById("openDes").style.display = "none";
 	}
 	
@@ -39,10 +47,14 @@
 </head>
 <body>
 <div id="openDes" style="display:none;font-size: 16px;"><a href="#" onclick="openDes()">Open Description</a></div>
-<div id="fixedLayer">
+<div id="descriptionLayer">
 This simulator is for the paper "Emergence of Social Norms  through Conflict Resolution <br/> in Networked Agent Societies" submitted for AAMAS 2019. <br/>
 Usage: Use the control panel on the right to configure parameters and see statistics. <br/> Use mouse drag and wheel to scroll and zoom in/out. (Tested on Chrome and Firefox) <a href="#" onclick="closeDes()">Close Description</a><br/>
-
 </div>
+
+<div id="loadingLayer">
+Loading Simulator...
+</div>
+
 </body>
 </html>
