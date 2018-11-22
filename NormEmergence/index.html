@@ -1,15 +1,48 @@
 <!DOCTYPE html>
 <head>
+	<meta http-equiv="cache-control" content="no-cache" />
     <meta charset="utf-8">
     <link rel="stylesheet" href="css/style.css" />
     <link rel="icon" href="images/favicon.png" />
     <script src="dist/main.js"></script>
 	<script src="dist/kdTree.js"></script>
     <link rel="stylesheet" href="css/dat-gui.css" />
-    <title>Road traffic simulator</title>
+    <title>Road Traffic Simulator</title>
+	
+	<style type="text/css">
+		body {
+			margin:0px auto;
+		}
+		#fixedLayer {
+			left: 40px;
+			top: 10px;
+			line-height:30px;
+			border:1px solid #F90;
+			font-size: 16px;
+		}
+	</style>
+	
+	
+	<script type="text/javascript" language="javascript">
+		
+	function closeDes(){
+		document.getElementById("fixedLayer").style.display = "none";
+		document.getElementById("openDes").style.display = "block";
+	}
+	function openDes(){
+		document.getElementById("fixedLayer").style.display = "block";
+		document.getElementById("openDes").style.display = "none";
+	}
+	
+	</script>
+	
 </head>
 <body>
+<div id="openDes" style="display:none;font-size: 16px;"><a href="#" onclick="openDes()">Open Description</a></div>
+<div id="fixedLayer">
+This simulator is for the paper "Emergence of Social Norms  through Conflict Resolution <br/> in Networked Agent Societies" submitted for AAMAS 2019. <br/>
+Usage: Use the control panel on the right to configure parameters and see statistics. <br/> Use mouse drag and wheel to scroll and zoom in/out. (Tested on Chrome and Firefox) <a href="#" onclick="closeDes()">Close Description</a><br/>
 
-
+</div>
 </body>
 </html>
