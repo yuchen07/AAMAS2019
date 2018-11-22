@@ -16,6 +16,9 @@ World = require('./model/world');
 
 settings = require('./settings');
 
+
+		
+		
 $(function() {
   var canvas, gui, guiVisualizer, guiWorld;
   canvas = $('<canvas />', {
@@ -23,7 +26,7 @@ $(function() {
   });
   $(document.body).append(canvas);
   window.world = new World();
-  world.load();
+  //world.load();
   
   if (world.intersections.length === 0) {
     world.generateMap();
@@ -36,23 +39,19 @@ $(function() {
   gui = new DAT.GUI();
   guiWorld = gui.addFolder('world');
   guiWorld.open();
-  guiWorld.add(world, 'save');
-  guiWorld.add(world, 'load');
-  guiWorld.add(world, 'clear');
   guiWorld.add(world, 'generateMap');
-  guiWorld.add(world, 'loggingCar');
   guiWorld.add(world, 'numberOnLeft').step(0.00001).listen();
   guiWorld.add(world, 'numberOnRight').step(0.00001).listen();
+  guiWorld.add(world, 'normEmergence').listen();
   
   guiVisualizer = gui.addFolder('visualizer');
   guiVisualizer.open();
   guiVisualizer.add(visualizer, 'running').listen();
-  guiVisualizer.add(visualizer, 'debug').listen();
   guiVisualizer.add(visualizer.zoomer, 'scale', 0.1, 2).listen();
-  guiVisualizer.add(visualizer, 'timeFactor', 0.1, 10).listen();
-  guiWorld.add(world, 'carsNumber').min(0).max(200).step(1).listen();
-  guiWorld.add(world, 'instantSpeed').step(0.00001).listen();
+  guiVisualizer.add(visualizer, 'RunningSpeed', 0.1, 10).listen();
+  guiWorld.add(world, 'carsNumber').min(0).max(30).step(1).listen();
   // gui.add(settings, 'lightsFlipInterval', 0, 400, 0.01).listen();
+  
 });
 
 
@@ -529,7 +528,7 @@ Car = (function() {
     this._speed = 0;
     this.width = 1.7;
     this.length = 3 + 2 * random();
-    this.maxSpeed = 3 ; // study the impact of slow cars* random();
+    this.maxSpeed = 5 ; // study the impact of slow cars* random();
     this.s0 = 2;
     this.timeHeadway = 1.5;
     this.maxAcceleration = 1;
@@ -640,7 +639,7 @@ Car = (function() {
 
 
   
-  // 9.4, if in opposite lane and their distance is decrease
+  // if in opposite lane and their distance is decrease
   Car.prototype.isFacingCollision = function(anotherCar) {
 	  if (!this.trajectory.isChangingLanes && !anotherCar.trajectory.isChangingLanes) {
 		  if(this.laneNumber == anotherCar.laneNumber)
@@ -1735,6 +1734,7 @@ World = (function() {
 	
 	this.numberOnLeft=0;
 	this.numberOnRight=0;
+	this.normEmergence="Not emerge";
 	
 	this.startTime = -1;
 	this.lastRecordTime=this.startTime;
@@ -1811,9 +1811,45 @@ World = (function() {
     }
     return _results;
   };
+  
+  World.prototype.sample = function(population, k){
+    if(!Array.isArray(population))
+        throw new TypeError("Population must be an array.");
+    var n = population.length;
+    if(k < 0 || k > n)
+        throw new RangeError("Sample larger than population or is negative");
 
+    var result = new Array(k);
+    var setsize = 21;   // size of a small set minus size of an empty list
+
+    if(k > 5)
+        setsize += Math.pow(4, Math.ceil(Math.log(k * 3, 4)))
+
+    if(n <= setsize){
+        // An n-length list is smaller than a k-length set
+        var pool = population.slice();
+        for(var i = 0; i < k; i++){          // invariant:  non-selected at [0,n-i)
+            var j = Math.random() * (n - i) | 0;
+            result[i] = pool[j];
+            pool[j] = pool[n - i - 1];       // move non-selected item into vacancy
+        }
+    }else{
+        var selected = new Set();
+        for(var i = 0; i < k; i++){
+            var j = Math.random() * (n - i) | 0;
+            while(selected.has(j)){
+                j = Math.random() * (n - i) | 0;
+            }
+            selected.add(j);
+            result[i] = population[j];
+        }
+    }
+
+    return result;
+}
+  
   World.prototype.generateMap = function(minX, maxX, minY, maxY) {
-    var gridSize, intersection, intersectionsNumber, map, previous, rect, step, x, y, _i, _j, _k, _l;
+    var gridSize, intersection, intersectionsNumber, map, previous, rect, step, x, y, _i, _j, _k, _l, x_t, y_t, c, x_apd;
     if (minX == null) {
       minX = -1;
     }
@@ -1827,28 +1863,112 @@ World = (function() {
       maxY = 1;
     }
     this.clear();
+	
+	
+    map = {};
+	gridSize = settings.gridSize;
+    step = 4 * gridSize;
+	// step = 2 * gridSize;
+    this.carsNumber = 20; // car number
+	
+	var xRange=[-1,0,1];
+	var yRange=[-1,0,1];
+	// var yList = this.sample(yRange, 2);
+	// console.log(yList);
+	if (Math.random() < 1) {
+		var xList;
+		if (Math.random() < 0.6) {
+			xList = this.sample(xRange, 3);
+		} else {
+			xList = this.sample(xRange, 2);
+		}
+		// console.log(xList, xList.length);
+		
+		for (var i=0; i < xList.length; i++) {
+			x = xList[i];
+			var yList;
+		    // console.log(x);
+			if (Math.random() < 0) {
+				yList = this.sample(yRange, 3);
+			} else {
+				yList = this.sample(yRange, 2);
+			}
+			
+			for (var j=0; j<yList.length;j++) {	
+				y = yList[j]; 
+				// console.log(x, y);
+				rect = new Rect(step * x, step * y, gridSize, gridSize);
+				intersection = new Intersection(rect);
+				this.addIntersection(map[[x, y]] = intersection);
+			}
+			
+			// console.log(x);
+			// console.log(yList);
+		}
+		// console.log(map, Object.keys(map).length);
+		
+		for (var i=0; i<yRange.length;i++) {	
+			y_t = yRange[i]; 
+			var xListNotUsed = xList.slice();
+			c=0;
+			for (var j=0; j<xList.length;j++) {
+				x_t = xList[j];
+				if (map[[x_t, y_t]] != null) {
+					var index = xListNotUsed.indexOf(x_t);
+					xListNotUsed.splice(index, 1);
+					c++;
+				}
+			}
+			if (c == 1) {
+				x_apd = this.sample(xListNotUsed, 1);
+				x = x_apd;
+				y = y_t;
+				rect = new Rect(step * x, step * y, gridSize, gridSize);
+				intersection = new Intersection(rect);
+				this.addIntersection(map[[x, y]] = intersection);
+			}
+		}
+	} else {
+		
+	}
+	
+	
+	/*
+	var inters = [[0, 0], [1, 0], [1, 1], [-1, -1] ];
+	for (var i=0;i<inters.length;i++){
+		x = inters[i][0];
+		y = inters[i][1];
+		// console.log(x,y);
+		if (map[[x, y]] == null) {
+			//console.log(JSON.stringify({ "x":x, "y":y}));
+			rect = new Rect(step * x, step * y, gridSize, gridSize);
+			intersection = new Intersection(rect);
+			this.addIntersection(map[[x, y]] = intersection);
+			intersectionsNumber -= 1;
+		}
+	}*/
+	// console.log(map);
+	
+    /*
 	intersectionsNumber=0;
 	while (intersectionsNumber < 4) {
 		intersectionsNumber = (Math.random() * (maxX - minX + 1) * (maxY - minY + 1)) | 0;
 	}
-	//	 intersectionsNumber = 4;
-    map = {};
-    gridSize = settings.gridSize;
-    step = 5 * gridSize;
-	// step = 2 * gridSize;
-    this.carsNumber = 20; // car number
 	console.log(JSON.stringify({ "intersectionsNumber":intersectionsNumber}));
     while (intersectionsNumber > 0) {
       x = _.random(minX, maxX);
       y = _.random(minY, maxY);
+	  // console.log(x,y);
       if (map[[x, y]] == null) {
-		console.log(JSON.stringify({ "x":x, "y":y}));
+		//console.log(JSON.stringify({ "x":x, "y":y}));
         rect = new Rect(step * x, step * y, gridSize, gridSize);
         intersection = new Intersection(rect);
         this.addIntersection(map[[x, y]] = intersection);
         intersectionsNumber -= 1;
       }
-    }
+    }*/
+	
+	
     for (x = _i = minX; minX <= maxX ? _i <= maxX : _i >= maxX; x = minX <= maxX ? ++_i : --_i) {
       previous = null;
       for (y = _j = minY; minY <= maxY ? _j <= maxY : _j >= maxY; y = minY <= maxY ? ++_j : --_j) {
@@ -1980,6 +2100,15 @@ World = (function() {
 		    totalChange+=car.changeNum;
 		}
 		
+		if (this.numberOnLeft == 0) {
+			this.normEmergence = "Emerged";
+		} else if (this.numberOnRight == 0) {
+			this.normEmergence = "Emerged";
+		}
+		else {
+			this.normEmergence = "Not emerge";
+		}
+		
 		for (id in _ref1) {
 			carNum++;
 		}	
@@ -2018,31 +2147,23 @@ World = (function() {
     _ref1 = this.cars.all();
     _results = [];
 	
-	
-	
 	// build kdtree
 	var balls = [];
 	for (id in _ref1) {
 		car = _ref1[id];
 		// car.updateXY();
-		
 		var ball = {
             x: car.coords.x,
             y: car.coords.y,
             id: car.id
         };
-		// console.log(car.coords.x)
-		// console.log(car.id)
 		balls.push(ball);
-		// console.log(ball.id);
 	}
 	
 	this.tree = new kdTree(balls, this.distance, ["x", "y"]); 
 	var r = [[1,-1],[-1,1]];
 	var c = [[1,-1],[-1,1]];
-	// console.log(this.getRandomInt(0,1));
 	
-	// [[1,-1],[-1,1]];
 	for(var i=0; i<balls.length; i++) {
         var ball = balls[i];
 	    var nearest = this.findNearest(ball);
@@ -2073,100 +2194,18 @@ World = (function() {
 				all_observations.set(cn1.id, cn1.laneNumber);
 			}
 			
-			// console.log(all_observations);
-			
-			// console.log('currentCar:'+currentCar.laneNumber);
-			// console.log('near_car:'+near_car.laneNumber);
-			// console.log(currentCar.isFacingCollision(near_car));
-			// if(currentCar.laneNumber != near_car.laneNumber) {
 			if(currentCar.isFacingCollision(near_car)) {
 				this.totalCordiNum++;
-				// console.log(agents);
-				// var existingAc=this.getExistingActions(agents);
-				// console.log(existingAc);
-				// console.log(this.merge_two_dicts(currentCar.bauca,near_car.bauca));
-				
 				var finalAction = this.dnaRandomly(agents);
-				
 				this.changeToTargetAction(agents, finalAction);
 				
-				// get statistics
-				var currentMethod = 'Randomly';//KlgTrans,Randomly
-				var stat = this.getStatistics();
-				// if(stat.isAllCars) {
-					// var data = stat.data;
-					// data.unshift(this.totalCordiNum);
-					// this.currentStat.push(data);
-					// var dt = new Date();
-					// var filename= currentMethod + ' stat_with_perAction ' + dt.getFullYear() + "/" + (dt.getMonth() + 1) + "/" + dt.getDate() +" "+ dt.getHours() + "," + (dt.getMinutes()) + "," + dt.getSeconds() + ".csv";
-					// if(data[1]==1) {
-						// this.exportToCsv(filename, this.currentStat);
-						// this.load();
-					// }
-				// }
-				// console.log(finalAction);
-
-				// var rand=this.getRandomInt(0,1);
-				// if(rand == 1)
-					// currentCar.switchToTheOtherLane();
-				// else
-					// near_car.switchToTheOtherLane();
+				var currentMethod = 'Randomly';
 			}
 			
-			// var a1 = currentCar.wl.getAction();
-            // var a2 = near_car.wl.getAction();
-			
-            // currentCar.wl.tellReward(r[a1][a2]);
-            // near_car.wl.tellReward(c[a1][a2]);
-			
-				// this.graphics.drawLine(new Point(0, 0), new Point(-1000, -1000) );
-	
-			// this.visualizer.graphics.drawLine(currentCar.coords, near_car.coords);
-			// this.visualizer.graphics.stroke(settings.colors.roadMarking);
-			// console.log(0);
-			// console.log("currentCar id:"+ currentCar.id + " action: "+a1 +"reward:" + r[a1][a2] + " prob[1]" + currentCar.wl.prob[1]+ " aveValue" + currentCar.wl.aveValue);
-			// console.log("near_car id:"+ near_car.id + " action: "+a2 +"reward:" + c[a1][a2] +  " prob[1]" + near_car.wl.prob[1]+ " aveValue" + near_car.wl.aveValue);
-			
-			// this.sleep(3000);
+			var stat = this.getStatistics();
 		  }
 	    }
 	}
-	// this.numberOnLeft = 0;
-	// this.numberOnRight = 0;
-	// for (id in _ref1) {
-      // car = _ref1[id];
-	  // if(car.laneNumber == 1)
-		// this.numberOnLeft++;
-	  // else
-		// this.numberOnRight++;
-	// }
-	
-	// console.log(this.getConformity(this.numberOnLeft, this.numberOnRight));
-	// console.log(new Date().getTime() - this.start);
-	
-	// var stat = this.getStatistics();
-	// console.log(stat.isAllCars);
-	// var sampleInterval = 500; // 500ms
-	// var currentMethod = 'Randomly';//KlgTrans,Randomly
-	// var currentTime=new Date().getTime();
-	// if(currentTime - this.lastRecordTime > sampleInterval) {
-		// var stat = this.getStatistics();
-		// if(stat.isAllCars) {
-			// var data = stat.data;
-			// data.unshift(currentTime-this.startTime);
-			// this.currentStat.push(data);
-			// this.lastRecordTime = currentTime;
-			// var dt = new Date();
-			// var filename= currentMethod + ' stat_with_time ' + dt.getFullYear() + "/" + (dt.getMonth() + 1) + "/" + dt.getDate() +" "+ dt.getHours() + "," + (dt.getMinutes()) + "," + dt.getSeconds() + ".csv";
-			// if(data[1]==1) {
-				// this.exportToCsv(filename, this.currentStat);
-				// this.load();
-			// }
-		// }
-	// }
-	
-	// var a.unshift(34);
-	// this.lastRecordTime=this.startTime;
 	
 	
 	
@@ -2397,7 +2436,7 @@ settings = {
   fps: 30,
   lightsFlipInterval: 160,
   gridSize: 14,
-  defaultTimeFactor: 10
+  defaultTimeFactor: 6
 };
 
 module.exports = settings;
@@ -3017,7 +3056,7 @@ Visualizer = (function() {
     this.toolMover = new ToolMover(this, true);
     this._running = false;
     this.previousTime = 0;
-    this.timeFactor = settings.defaultTimeFactor;
+    this.RunningSpeed = settings.defaultTimeFactor;
     this.debug = false;
   }
 
@@ -3115,7 +3154,7 @@ Visualizer = (function() {
     center = car.coords;
     rect = new Rect(0, 0, 1.2 * car.length, 1.8 * car.width);
     rect.center(new Point(0, 0));
-    boundRect = new Rect(0, 0, car.length, car.width);
+    boundRect = new Rect(0, 0, 1.5 * car.length, 1.5 *car.width);
     boundRect.center(new Point(0, 0));
     this.graphics.save();
     this.ctx.translate(center.x, center.y);
@@ -3181,8 +3220,8 @@ Visualizer = (function() {
       }
       this.previousTime = time;
       this.updateCanvasSize();
-      this.graphics.clear(settings.colors.background);
-      this.graphics.save();
+      //this.graphics.clear(settings.colors.background);
+      //this.graphics.save();
       this.zoomer.transform();
       this.drawGrid();
       _ref = this.world.intersections.all();
@@ -3210,7 +3249,7 @@ Visualizer = (function() {
       this.toolHighlighter.draw();
 	  
 	  
-	  this.world.onTick(this.timeFactor * delta / 1000);//update world information and then draw
+	  this.world.onTick(this.RunningSpeed * delta / 1000);//update world information and then draw
 
       this.graphics.restore();
     }
