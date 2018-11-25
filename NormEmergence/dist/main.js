@@ -25,6 +25,10 @@ $(function() {
     id: 'canvas'
   });
   $(document.body).append(canvas);
+  
+  $("#loadingLayer").html("Loading Simulator...");
+  
+  
   window.world = new World();
   //world.load();
   
