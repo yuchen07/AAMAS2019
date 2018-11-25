@@ -22,9 +22,9 @@
 		}
 		#loadingLayer {
 			position:fixed;
-			left: 200px;
-			top: 200px;
-			font-size: 50px;
+			left: 100px;
+			top: 150px;
+			font-size: 40px;
 		}
 		
 	</style>
@@ -41,17 +41,6 @@
 		document.getElementById("openDes").style.display = "none";
 	}
 	
-	(function() {
-	   // your page initialization code here
-	   // the DOM will be available here
-	   setTimeout(
-		function() {
-		  document.getElementById("loadingLayer").innerHTML ="Loading Simulator...<br/>Your browser may not support the simulator. <br/> Please try another browser (e.g., Chrome or Firefox).";
-		}, 10000);
-		
-	})();
-
-	
 	
 	</script>
 	
@@ -64,7 +53,7 @@ Usage: Use the control panel on the right to configure parameters and see statis
 </div>
 
 <div id="loadingLayer">
-Loading Simulator...
+Loading Simulator... (If the browser does not respond for a long time. Please try another browser, e.g., Chrome or Firefox.)
 </div>
 
 </body>
