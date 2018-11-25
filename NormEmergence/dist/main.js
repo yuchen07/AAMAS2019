@@ -52,7 +52,7 @@ $(function() {
   guiVisualizer.add(visualizer, 'RunningSpeed', 0.1, 10).listen();
   guiWorld.add(world, 'carsNumber').min(0).max(30).step(1).listen();
   // gui.add(settings, 'lightsFlipInterval', 0, 400, 0.01).listen();
-  //document.getElementById("loadingLayer").style.display = "none";
+  document.getElementById("loadingLayer").style.display = "none";
 });
 
 
