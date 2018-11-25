@@ -4,8 +4,8 @@
     <meta charset="utf-8">
     <link rel="stylesheet" href="css/style.css" />
     <link rel="icon" href="images/favicon.png" />
-    <script src="dist/main.js"></script>
-	<script src="dist/kdTree.js"></script>
+    <script type="text/javascript" language="javascript" src="dist/main.js"></script>
+	<script type="text/javascript" language="javascript" src="dist/kdTree.js"></script>
     <link rel="stylesheet" href="css/dat-gui.css" />
     <title>Road Traffic Simulator</title>
 	
@@ -22,9 +22,8 @@
 		}
 		#loadingLayer {
 			position:fixed;
-			left: 300px;
+			left: 200px;
 			top: 200px;
-			line-height:30px;
 			font-size: 50px;
 		}
 		
@@ -46,14 +45,14 @@
 	
 </head>
 <body>
-<div id="openDes" style="display:none;font-size: 16px;"><a href="#" onclick="openDes()">Open Description</a></div>
+<div id="openDes" style="display:none;font-size: 16px;cursor:pointer;color:blue;"><a onclick="openDes()">Open Description</a></div>
 <div id="descriptionLayer">
 This simulator is for the paper "Emergence of Social Norms  through Conflict Resolution <br/> in Networked Agent Societies" submitted for AAMAS 2019. <br/>
-Usage: Use the control panel on the right to configure parameters and see statistics. <br/> Use mouse drag and wheel to scroll and zoom in/out. (Tested on Chrome and Firefox) <a href="#" onclick="closeDes()">Close Description</a><br/>
+Usage: Use the control panel on the right to configure parameters and see statistics. <br/> Use mouse drag and wheel to scroll and zoom in/out. (Tested on Chrome and Firefox) <a style="cursor:pointer;color:blue;" onclick="closeDes()">Close Description</a><br/>
 </div>
 
 <div id="loadingLayer">
-Loading Simulator...
+Your browser may not support the simulator. <br/> Please try another browser (e.g., Chrome or Firefox).
 </div>
 
 </body>
