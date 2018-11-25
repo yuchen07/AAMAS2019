@@ -30,7 +30,7 @@ $(function() {
   //world.load();
   
   if (world.intersections.length === 0) {
-    world.generateMap();
+    world.getRandomMap();
     world.carsNumber = 20; // initial car number
   }
   window.visualizer = new Visualizer(world);
@@ -40,7 +40,7 @@ $(function() {
   gui = new DAT.GUI();
   guiWorld = gui.addFolder('world');
   guiWorld.open();
-  guiWorld.add(world, 'generateMap');
+  guiWorld.add(world, 'getRandomMap');
   guiWorld.add(world, 'numberOnLeft').step(0.00001).listen();
   guiWorld.add(world, 'numberOnRight').step(0.00001).listen();
   guiWorld.add(world, 'normEmergence').listen();
@@ -1849,7 +1849,7 @@ World = (function() {
     return result;
 }
   
-  World.prototype.generateMap = function(minX, maxX, minY, maxY) {
+  World.prototype.getRandomMap = function(minX, maxX, minY, maxY) {
     var gridSize, intersection, intersectionsNumber, map, previous, rect, step, x, y, _i, _j, _k, _l, x_t, y_t, c, x_apd;
     if (minX == null) {
       minX = -1;
